@@ -33,6 +33,11 @@ export async function ooic(config: OoicConfig) {
 
   await connect();
   await initRouter(app);
+  try {
+    await import("./../../../src/model/model_relation_map.ts)
+  } catch (err) {
+    console.warn("Missing model relation mapper. Please put 'model_relation_map.ts' in src/model directory.")
+  } 
   await initErrorHandlers(app);
   app.use(unhandled);
 

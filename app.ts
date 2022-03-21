@@ -46,6 +46,10 @@ export async function ooic(config: OoicConfig) {
 
   await swaggerify(app);
   await sync();
+  
+    if (fs.existsSync("src/model/seeder.ts")) {
+      await import("./../../../src/model/seeder")
+    }
 
   if (process.env.NODE_ENV === "development") {
     http.createServer(app).listen(process.env.PORT);

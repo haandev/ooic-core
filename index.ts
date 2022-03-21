@@ -10,4 +10,5 @@ export const Router = express.Router;
 export type { RequestHandler, ErrorRequestHandler } from "express";
 export { default as zod } from "zod";
 export { StatusCodes } from "http-status-codes";
-export type { UploadedFile } from "express-fileupload"
+export type { UploadedFile } from "express-fileupload";
+export { LocalizerFactory } from "./utils"

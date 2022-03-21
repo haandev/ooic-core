@@ -21,3 +21,31 @@ export const getCommentLines = (str: string) => {
 export const NumberIfNumeric = (value) => {
   return isNaN(value) ? value : Number(value);
 }
+
+
+export const LocalizerFactory = (options: {
+  localesArrayKey:string,
+  localeShortCodeKey:string
+}) => {
+  const localesArrayKey = options.localesArrayKey || "locales"
+  const localeShortCodeKey  = options.localeShortCodeKey || "locale"
+ const Localizer = (source, target) => {
+    if (typeof source === 'object' && !Array.isArray(source)) {
+      const localizationObject = target
+        ? source[localesArrayKey].find((item) => item[localeShortCodeKey] === target)
+        : source[localesArrayKey][0] || {}
+      const newSource = {}
+      Object.entries(source).forEach(([key, value]) => {
+        if (key !== localesArrayKey) {
+          if (['string', 'number'].includes(typeof value)) {
+            newSource[key] = localizationObject[key] || value
+          } else newSource[key] = Localizer(value, target)
+        }
+      })
+      return newSource
+    } else if (Array.isArray(source)) {
+      return source.map((data) => Localizer(data, target))
+    }
+  }
+  return Localizer
+}

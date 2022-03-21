@@ -29,32 +29,22 @@ export const LocalizerFactory = (options: {
 }) => {
   const localesArrayKey = options.localesArrayKey || "locales"
   const localeShortCodeKey  = options.localeShortCodeKey || "locale"
-  const Localizer = (source:any, target?:string) => {
-    if (Array.isArray(source)) {
-      source.forEach((data) => Localizer(data, target))
-    } else if (typeof source === 'object') {
-      if (source[localesArrayKey]) {
-        let localizationObject :any
-        if (target) {
-          localizationObject = source.locales.find(
-            (item:any) => item[localeShortCodeKey] === target
-          )
-        } else {
-          localizationObject = source[localesArrayKey][0]
-        }
-        Object.entries(localizationObject).forEach(([key, value]) => {
-          if (key !== localeShortCodeKey) source[key] = value
-        })
-        delete source[localesArrayKey]
-      }
+ const Localizer = (source, target) => {
+    if (typeof source === 'object' && !Array.isArray(source)) {
+      const localizationObject = target
+        ? source[localesArrayKey].find((item) => item[localeShortCodeKey] === target)
+        : source[localesArrayKey][0] || {}
+      const newSource = {}
       Object.entries(source).forEach(([key, value]) => {
-        source[key] = Localizer(value, target)
+        if (key !== localesArrayKey) {
+          if (['string', 'number'].includes(typeof value)) {
+            newSource[key] = localizationObject[key] || value
+          } else newSource[key] = Localizer(value, target)
+        }
       })
-    } else if (
-      source === null ||
-      ['string', 'number'].includes(typeof source)
-    ) {
-      return source
+      return newSource
+    } else if (Array.isArray(source)) {
+      return source.map((data) => Localizer(data, target))
     }
   }
   return Localizer

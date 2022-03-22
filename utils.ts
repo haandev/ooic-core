@@ -30,7 +30,7 @@ export const LocalizerFactory = (options: {
   const localesArrayKey = options.localesArrayKey || "locales"
   const localeShortCodeKey  = options.localeShortCodeKey || "locale"
  const Localizer = (raw, target) => {
-    const source = JSON.parse(JSON.stringify(raw)
+    const source = JSON.parse(JSON.stringify(raw))
     if (typeof source === 'object' && !Array.isArray(source)) {
       const localizationObject = target
         ? source[localesArrayKey].find((item) => item[localeShortCodeKey] === target) || {}

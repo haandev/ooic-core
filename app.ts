@@ -52,14 +52,14 @@ export async function ooic(config: OoicConfig) {
     }
 
   if (process.env.NODE_ENV === "development") {
-    http.createServer(app).listen(process.env.PORT);
+    http.createServer(app).listen(process.env.PORT || process.env.APP_PORT);
     console.log(
-      `\nWelcome to ${packageJson.name} v${packageJson.version}! Listening on port ${process.env.PORT}` +
+      `\nWelcome to ${packageJson.name} v${packageJson.version}! Listening on port ${process.env.PORT || process.env.APP_PORT}` +
         `\nRunning on environment: ${process.env.NODE_ENV}` +
-        `\nhttp://localhost:${process.env.PORT}`
+        `\nhttp://localhost:${process.env.PORT || process.env.APP_PORT}`
     );
   } else {
-    http.createServer(app).listen(process.env.PORT);
+    http.createServer(app).listen(process.env.PORT || process.env.APP_PORT);
     config.ssl?.enabled && https.createServer({ cert: config.ssl.cert, key: config.ssl.key }, app).listen(process.env.SECURE_PORT);
     console.log(
       `\nWelcome to ${packageJson.name} v${packageJson.version}! Listening on port ${process.env.PORT} and ${process.env.SECURE_PORT}` + `\nRunning on environment: ${process.env.NODE_ENV}`

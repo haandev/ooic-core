@@ -1,4 +1,5 @@
-import { Sequelize, Dialect, DataTypes, Model } from "@sequelize/core";
+import { Sequelize, Dialect } from "@sequelize/core";
+export { DataTypes, Model } from "@sequelize/core";
 export const sequelize = new Sequelize({
   dialect: process.env.DB_DRIVER as Dialect,
   port: Number(process.env.DB_PORT) || 3306,

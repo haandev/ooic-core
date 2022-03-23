@@ -24,12 +24,12 @@ export const NumberIfNumeric = (value) => {
 
 
 export const LocalizerFactory = (options: {
-  localesArrayKey:string,
-  localeShortCodeKey:string
+  localesArrayKey: string,
+  localeShortCodeKey: string
 }) => {
   const localesArrayKey = options.localesArrayKey || "locales"
-  const localeShortCodeKey  = options.localeShortCodeKey || "locale"
- const Localizer = (raw, target) => {
+  const localeShortCodeKey = options.localeShortCodeKey || "locale"
+  const Localizer = (raw, target) => {
     const source = JSON.parse(JSON.stringify(raw))
     if (typeof source === 'object' && !Array.isArray(source)) {
       const localizationObject = target
@@ -38,7 +38,7 @@ export const LocalizerFactory = (options: {
       const newSource = {}
       Object.entries(source).forEach(([key, value]) => {
         if (key !== localesArrayKey) {
-          if (['string', 'number'].includes(typeof value) || value===null) {
+          if (['string', 'number'].includes(typeof value) || value === null) {
             newSource[key] = localizationObject[key] || value
           } else newSource[key] = Localizer(value, target)
         }
@@ -53,24 +53,28 @@ export const LocalizerFactory = (options: {
 
 export const NestedChildren = async ({
   model,
-  subItemsArrayKey,
+  subItemsKey,
+  createArray,
   parentIdField,
+  primaryKey,
   parentIdEntryPoint,
 }) => {
   const result = await model.findAll({
     where: { [parentIdField]: parentIdEntryPoint },
   });
-  const promiseArray = result.map((category) =>
+  const promiseArray = result.map((item) =>
     NestedChildren({
       model,
-      subItemsArrayKey,
+      subItemsKey,
+      primaryKey,
+      createArray,
       parentIdField,
-      parentIdEntryPoint: category.id,
+      parentIdEntryPoint: item[primaryKey],
     })
   );
   const data = await Promise.all(promiseArray);
   return result.map((item, index) => ({
     ...item.toJSON(),
-    ...(data ? { [subItemsArrayKey]: data[index] } : {}),
+    ...(data ? { [subItemsKey]: createArray ? data[index] : (data[index][0] || {}) } : {}),
   }));
 };

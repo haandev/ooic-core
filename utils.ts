@@ -50,3 +50,27 @@ export const LocalizerFactory = (options: {
   }
   return Localizer
 }
+
+export const NestedChildren = async ({
+  model,
+  subItemsArrayKey,
+  parentIdField,
+  parentIdEntryPoint,
+}) => {
+  const result = await model.findAll({
+    where: { [parentIdField]: parentIdEntryPoint },
+  });
+  const promiseArray = result.map((category) =>
+    NestedChildren({
+      model,
+      subItemsArrayKey,
+      parentIdField,
+      parentIdEntryPoint: category.id,
+    })
+  );
+  const data = await Promise.all(promiseArray);
+  return result.map((item, index) => ({
+    ...item.toJSON(),
+    ...(data ? { [subItemsArrayKey]: data[index] } : {}),
+  }));
+};

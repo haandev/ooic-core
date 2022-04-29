@@ -1,4 +1,5 @@
 import { ZodObject, ZodSchema } from "zod";
+export { Model } from "@sequelize/core";
 
 export const toKebabCase = (str: string) =>
   str &&
@@ -78,3 +79,74 @@ export const NestedChildren = async ({
     ...(data ? { [subItemsKey]: createArray ? data[index] : (data[index][0] || {}) } : {}),
   }));
 };
+
+
+export class HierarchicalModel extends Model {
+  static hierarchReady: boolean = false;
+  static as: string;
+  static foreignKey: string;
+  static primaryKey: string;
+  public static initHierarchy(
+    options: {
+      as?: string;
+      primaryKey?: string;
+      foreignKey?: string;
+    } = {}
+  ) {
+    this.hasMany(Category, {
+      as: options.as || "children",
+      foreignKey: options.foreignKey || "parentId",
+    });
+    this.hierarchReady = true;
+    this.as = options.as || "children";
+    this.foreignKey = options.foreignKey || "parentId";
+    this.primaryKey = options.primaryKey || "id";
+  }
+
+  public static async getChildrenByPk(pk, depth?: number, scope?: any) {
+    const d = depth ?? Number.MAX_SAFE_INTEGER;
+    const obj = scope ? this.scope(scope) : this;
+    const result = await obj.findAll({
+      where: { [this.foreignKey]: pk },
+    });
+
+    if (d) {
+      const data = await Promise.all(
+        result.map(async (item, index) => ({
+          ...item.toJSON(),
+          [this.as]: await this.getChildrenByPk(
+            item[this.primaryKey],
+            d - 1,
+            scope
+          ),
+        }))
+      );
+      return data;
+    } else return result;
+  }
+
+  public static async getTreeByPk(pk, depth?: number, scope?: any) {
+    const obj = scope ? this.scope(scope) : this;
+    const [result, children] = await Promise.all([
+      obj.findByPk(pk),
+      this.getChildrenByPk(pk, depth, scope),
+    ]);
+    return { ...result.toJSON(), [this.as]: children };
+  }
+
+  public static async getAncestorsByPk(pk, depth?: number, scope?: any) {
+    const d = depth ?? Number.MAX_SAFE_INTEGER;
+    const obj = scope ? this.scope(scope) : this;
+
+    const result = await obj.findByPk(pk);
+    let parent = [];
+    if (result[this.foreignKey] && d) {
+      parent = await this.getAncestorsByPk(
+        result[this.foreignKey],
+        d - 1,
+        scope
+      );
+    }
+    return [result.toJSON(), ...parent];
+  }
+}

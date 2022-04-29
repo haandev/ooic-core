@@ -1,5 +1,5 @@
+import { Model } from "@sequelize/core";
 import { ZodObject, ZodSchema } from "zod";
-export { Model } from "@sequelize/core";
 
 export const toKebabCase = (str: string) =>
   str &&
@@ -52,35 +52,6 @@ export const LocalizerFactory = (options: {
   return Localizer
 }
 
-export const NestedChildren = async ({
-  model,
-  subItemsKey,
-  createArray,
-  parentIdField,
-  primaryKey,
-  parentIdEntryPoint,
-}) => {
-  const result = await model.findAll({
-    where: { [parentIdField]: parentIdEntryPoint },
-  });
-  const promiseArray = result.map((item) =>
-    NestedChildren({
-      model,
-      subItemsKey,
-      primaryKey,
-      createArray,
-      parentIdField,
-      parentIdEntryPoint: item[primaryKey],
-    })
-  );
-  const data = await Promise.all(promiseArray);
-  return result.map((item, index) => ({
-    ...item.toJSON(),
-    ...(data ? { [subItemsKey]: createArray ? data[index] : (data[index][0] || {}) } : {}),
-  }));
-};
-
-
 export class HierarchicalModel extends Model {
   static hierarchReady: boolean = false;
   static as: string;
@@ -93,14 +64,16 @@ export class HierarchicalModel extends Model {
       foreignKey?: string;
     } = {}
   ) {
-    this.hasMany(Category, {
-      as: options.as || "children",
-      foreignKey: options.foreignKey || "parentId",
-    });
+    
     this.hierarchReady = true;
     this.as = options.as || "children";
     this.foreignKey = options.foreignKey || "parentId";
     this.primaryKey = options.primaryKey || "id";
+
+    this.hasMany(this, {
+      as: this.as,
+      foreignKey: this.foreignKey
+    });
   }
 
   public static async getChildrenByPk(pk, depth?: number, scope?: any) {

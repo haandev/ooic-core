@@ -39,7 +39,9 @@ export const LocalizerFactory = (options: {
       const newSource = {}
       Object.entries(source).forEach(([key, value]) => {
         if (key !== localesArrayKey) {
-          if (['string', 'number'].includes(typeof value) || value === null) {
+          if (key === 'id'){
+            newSource[key] = value
+          } else if (['string', 'number'].includes(typeof value) || value === null) {
             newSource[key] = localizationObject[key] || value
           } else newSource[key] = Localizer(value, target)
         }
